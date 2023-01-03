@@ -1,0 +1,1 @@
+Just a proof of setup. Rendering a rotating cube, as per the Getting Started section of Three.js docs.
