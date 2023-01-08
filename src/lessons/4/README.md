@@ -1,9 +1,8 @@
 ## Exercise
-Create a polygon out of triangles. Based on:
-- https://content.udacity-data.com/cs291/notes/UdacityLesson2PointsVectorsandMeshes.pdf
-and
-- https://github.com/udacity/cs291/blob/master/unit2/polygon-creation.js
-- https://github.com/udacity/cs291/blob/master/unit2/polygon-location.js
-- https://github.com/udacity/cs291/blob/master/unit2/polygon-radius.js
+Build a stairway from the ground to the golden cup, given the initial two stairs. This is an exercise in 3d object positioning. 
 
-This is an exercise on triangulation (tessellation). It is important to remember that a shape is considered to be on the "front side" if the vertices follow one another in the counterclockwise direction. If they follow in a clockwise direction, the shappe will be considered to be on the "back side", and will be invisible.
+Based on:
+- problem 2.4 in https://content.udacity-data.com/cs291/notes/UdacityLesson2PointsVectorsandMeshes.pdf
+- initial setup in https://github.com/udacity/cs291/blob/master/unit2/create-stairs.js
+
+Updated syntax of the source code of the problem to modern standards. Also, migrated the code for the Coordinates visual helper; although I could have probably just used [THREE.AxesHelper](https://threejs.org/docs/#api/en/helpers/AxesHelper)

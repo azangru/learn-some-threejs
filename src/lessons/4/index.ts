@@ -17,7 +17,6 @@ import * as Coordinates from './coordinates';
 
 import styles from './lesson4.module.css';
 
-
 const state = {
   showGridX: false,
   showGridY: false,
@@ -79,30 +78,44 @@ const createStairs = (scene: Scene) => {
 
   // +Y direction is up
 	// Define the two pieces of the step, vertical and horizontal
-	// THREE.CubeGeometry takes (width, height, depth)
+	// THREE.BoxGeometry takes (width, height, depth)
 	const stepVertical = new BoxGeometry(stepWidth, verticalStepHeight, stepThickness);
 	const stepHorizontal = new BoxGeometry(stepWidth, stepThickness, horizontalStepDepth);
-	let stepMesh;
 
-  // Make and position the vertical part of the step
-	stepMesh = new Mesh( stepVertical, stepMaterialVertical );
-	// The position is where the center of the block will be put.
-	// You can define position as THREE.Vector3(x, y, z) or in the following way:
-	stepMesh.position.x = 0;			// centered at origin
-	stepMesh.position.y = verticalStepHeight/2;	// half of height: put it above ground plane
-	stepMesh.position.z = 0;			// centered at origin
-	scene.add( stepMesh );
+	// The position of a step is where the center of the block will be put.
+	const stepX = 0; // centered at origin
+  let verticalStepY = verticalStepHeight / 2;	// starting with half the stair height to put the stair above ground plane
+  let verticalStepZ = 0;
 
-	// Make and position the horizontal part
-	stepMesh = new Mesh( stepHorizontal, stepMaterialHorizontal );
-	stepMesh.position.x = 0;
 	// Push up by half of horizontal step's height, plus vertical step's height
-	stepMesh.position.y = stepThickness/2 + verticalStepHeight;
+  let horizontalStepY = stepThickness / 2 + verticalStepHeight;
 	// Push step forward by half the depth, minus half the vertical step's thickness
-	stepMesh.position.z = horizontalStepDepth/2 - stepHalfThickness;
-	scene.add( stepMesh );
-};
+  let horizontalStepZ = horizontalStepDepth / 2 - stepHalfThickness;
 
+
+  for (let i = 1; i < 7; i++) {
+    const verticalStepMesh = new Mesh( stepVertical, stepMaterialVertical );
+    verticalStepMesh.position.x = stepX; // centered at origin
+    verticalStepMesh.position.y = verticalStepY;
+    verticalStepMesh.position.z = verticalStepZ;
+
+    const horizontalStepMesh = new Mesh( stepHorizontal, stepMaterialHorizontal );
+    horizontalStepMesh.position.x = stepX;
+    horizontalStepMesh.position.y = horizontalStepY;
+    horizontalStepMesh.position.z = horizontalStepZ;
+
+    scene.add(verticalStepMesh);
+    scene.add(horizontalStepMesh);
+
+    verticalStepY = horizontalStepY + verticalStepHeight / 2;
+    verticalStepZ = horizontalStepZ + horizontalStepDepth / 2 - stepHalfThickness;
+
+    horizontalStepY = horizontalStepY + stepThickness / 2 + verticalStepHeight;
+    horizontalStepZ = horizontalStepZ + horizontalStepDepth - stepHalfThickness * 2;
+  }
+
+
+};
 
 const createCup = (scene: Scene) => {
 	var cupMaterial = new MeshLambertMaterial({ color: 0xFDD017});
@@ -120,7 +133,6 @@ const createCup = (scene: Scene) => {
 	cup.position.z = 1925;
 	scene.add( cup );
 };
-
 
 const fillScene = () => {
 	// SCENE
