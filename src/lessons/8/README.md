@@ -1,10 +1,5 @@
 ## Exercise
-Create an RGB triangle with vertex colors. 
+Update the drinking bird model that was created in a previous unit. Change materials to add shininess and transparency
 
 Based on:
-- Vertex Attributes exercise in unit 3 in https://content.udacity-data.com/cs291/notes/UdacityLesson3ColorsandMaterials.pdf
-- Initial setup in https://github.com/udacity/cs291/blob/master/unit3/vertex-attributes.js — required update to BufferGeometry and BufferAttributes for color.
-
-Importantly, when the color attribute was created from the BufferAttribute (`new BufferAttribute( colors, 3, true)`), normalization had to be used to make sure that colors do not go out of the GLSL range.
-
-### Note
+- Drinking bird shiny (https://github.com/udacity/cs291/blob/d363a1792b66e3e3682240fd013d6617d8125a0a/unit3/drinking-bird-shiny.js) and Drinking bird transparency (https://github.com/udacity/cs291/blob/d363a1792b66e3e3682240fd013d6617d8125a0a/unit3/drinking-bird-transparency.js).

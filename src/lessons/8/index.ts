@@ -167,12 +167,19 @@ const createHead = (scene: Scene) => {
 };
 
 const createSupport = (scene: Scene) => {
-	const material = new MeshLambertMaterial({ color: 0xF07020 });
+	const legMaterial = new MeshPhongMaterial( { shininess: 4 } );
+	legMaterial.color.setHex( 0xAdA79b );
+	legMaterial.specular.setRGB( 0.5, 0.5, 0.5 );
+
+	const footMaterial = new MeshPhongMaterial( { color: 0x960f0b, shininess: 30 } );
+	footMaterial.specular.setRGB( 0.5, 0.5, 0.5 );
+
+	const bevelRadius = 1.9;
 
 	// base
 	const base = new Mesh(
 		new BoxGeometry(20 + 64 + 110, 4, 2 * 77),
-		material
+		footMaterial
 	);
 	base.position.x = -45;	// (20+32) - half of width (20+64+110)/2
 	base.position.y = 4/2;	// half of height
@@ -182,7 +189,7 @@ const createSupport = (scene: Scene) => {
 	// left foot
 	const leftFoot = new Mesh(
 		new BoxGeometry(20 + 64 + 110, 52, 6),
-		material
+		footMaterial
 	);
 	leftFoot.position.x = -45;	// (20+32) - half of width (20+64+110)/2
 	leftFoot.position.y = 52/2;	// half of height
@@ -192,7 +199,7 @@ const createSupport = (scene: Scene) => {
 	// left leg
 	const leftLeg = new Mesh(
 		new BoxGeometry(64, 334+52, 6),
-		material
+		legMaterial
 	);
 	leftLeg.position.x = 0;	// centered on origin along X
 	leftLeg.position.y = (334+52)/2;
@@ -202,7 +209,7 @@ const createSupport = (scene: Scene) => {
 	// right foot
 	const rightFoot = new Mesh(
 		new BoxGeometry(20 + 64 + 110, 52, 6),
-		material
+		footMaterial
 	);
 	rightFoot.position.x = -45;	// (20+32) - half of width (20+64+110)/2
 	rightFoot.position.y = 52/2;	// half of height
@@ -212,7 +219,7 @@ const createSupport = (scene: Scene) => {
 	// right leg
 	const rightLeg = new Mesh(
 		new BoxGeometry(64, 334+52, 6),
-		material
+		legMaterial
 	);
 	rightLeg.position.x = 0;	// centered on origin along X
 	rightLeg.position.y = (334+52)/2;
