@@ -91,6 +91,7 @@ const fillScene = () => {
 
 	for (let i = 0; i < 24; i++) {
 		const petalMesh = new Mesh(petalGeometry, petalMaterial);
+		petalMesh.scale.x = 0.25;
 		const petal = new Object3D();
 		petal.position.y = flowerHeight;
 		petal.add(petalMesh);
@@ -98,6 +99,7 @@ const fillScene = () => {
 		const yRotationDeg = yRotationStep * i;
 		petalMesh.rotation.z = - Math.PI / 2;
 		petal.rotation.y = yRotationDeg * Math.PI / 180;
+		petal.rotation.z = Math.PI / 180 * 20;
 		flower.add(petal);
 	}
 

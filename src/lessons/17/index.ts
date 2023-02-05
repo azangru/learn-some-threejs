@@ -1,9 +1,11 @@
 import {
   Scene,
   WebGLRenderer,
+	Vector3,
   Mesh,
 	Object3D,
   MeshLambertMaterial,
+	MeshPhongMaterial,
 	SphereGeometry,
   CylinderGeometry,
   Fog,
@@ -34,11 +36,11 @@ const main = () => {
 
 	// CAMERA
 	const camera = new PerspectiveCamera(38, canvasRatio, 1, 10000);
-	camera.position.set(-200, 400, 20);
+	camera.position.set( -7, 7, 2 );
 
 	// CONTROLS
 	cameraControls = new OrbitControls(camera, renderer.domElement);
-	cameraControls.target.set(0,150,0);
+	cameraControls.target.set(0,0,0);
 
 	const { scene} = fillScene();
 
@@ -67,48 +69,73 @@ const fillScene = () => {
 	const axesHelper = new AxesHelper( 250 );
 	scene.add(axesHelper);
 
+	const cylinderMaterial = new MeshPhongMaterial({ color: 0xD1F5FD, specular: 0xD1F5FD, shininess: 100 });
 
-	// FLOWER
-	const petalMaterial = new MeshLambertMaterial({ color: 0xCC5920 });
-	const flowerHeight = 200;
-	const petalLength = 120;
-	const flower = new Object3D();
+	// get two diagonally-opposite corners of the cube and compute the
+	// cylinder axis direction and length
+	const maxCorner = new Vector3(1, 1, 1);
+	const minCorner = new Vector3(-1,-1,-1);
 
-	// Rest of the flower
-	const stamenMaterial = new MeshLambertMaterial({ color: 0x333310 });
-	const stamen = new Mesh(new SphereGeometry( 20, 32, 16 ), stamenMaterial);
-	stamen.position.y = flowerHeight;	// move to flower center
-	flower.add(stamen);
+	const cylAxis = new Vector3().subVectors( maxCorner, minCorner );
+	const cylLength = cylAxis.length();
 
+	// take dot product of cylAxis and up vector to get cosine of angle
+	cylAxis.normalize();
+	const theta = Math.acos( cylAxis.dot( new Vector3(0,1,0) ) ); // or just simply theta = Math.acos( cylAxis.y );
 
-	/////////
 	// YOUR CODE HERE
-	// add code here to make 24 petals, radiating around the sphere
-	// Just rotates and positions on the cylinder and petals are needed.
-	const petalsCount = 24;
-	const yRotationStep = 360 / petalsCount; // 15 degrees
-	const petalGeometry = new CylinderGeometry(15, 0, petalLength, 32);
+	const cylinderGeometry = new CylinderGeometry(0.2, 0.2, cylLength, 32);
 
-	for (let i = 0; i < 24; i++) {
-		const petalMesh = new Mesh(petalGeometry, petalMaterial);
-		const petal = new Object3D();
-		petal.position.y = flowerHeight;
-		petal.add(petalMesh);
-		petalMesh.position.x = petalLength / 2; // 20 is the radius of the sphere (stamen)
-		const yRotationDeg = yRotationStep * i;
-		petalMesh.rotation.z = - Math.PI / 2;
-		petal.rotation.y = yRotationDeg * Math.PI / 180;
-		flower.add(petal);
-	}
+	const cylinder1 = createRotatedCylinder({
+		geometry: cylinderGeometry,
+		material: cylinderMaterial,
+		rotationAxis: new Vector3(1,0,-1),
+		theta
+	});
+	scene.add(cylinder1);
 
-	const stemMaterial = new MeshLambertMaterial({ color: 0x339424 });
-	const stem = new Mesh(new CylinderGeometry(10, 10, flowerHeight, 32), stemMaterial);
-	stem.position.y = flowerHeight/2;	// move from ground to stamen
-	flower.add(stem);
+	const cylinder2 = createRotatedCylinder({
+		geometry: cylinderGeometry,
+		material: cylinderMaterial,
+		rotationAxis: new Vector3(-1,0,-1),
+		theta
+	});
+	scene.add(cylinder2);
 
-	scene.add(flower);
+	const cylinder3 = createRotatedCylinder({
+		geometry: cylinderGeometry,
+		material: cylinderMaterial,
+		rotationAxis: new Vector3(-1,0,1),
+		theta
+	});
+	scene.add(cylinder3);
+
+	const cylinder4 = createRotatedCylinder({
+		geometry: cylinderGeometry,
+		material: cylinderMaterial,
+		rotationAxis: new Vector3(1,0,1),
+		theta
+	});
+	scene.add(cylinder4);
+
+
+	// cylinder.clone
 
   return { scene };
+};
+
+const createRotatedCylinder = (params: {
+	geometry: CylinderGeometry;
+	material: MeshPhongMaterial;
+	rotationAxis: Vector3;
+	theta: number;
+}) => {
+	const { geometry, material, rotationAxis, theta } = params;
+	const cylinder = new Mesh(geometry, material);
+	rotationAxis.normalize();
+	cylinder.matrixAutoUpdate = false;
+	cylinder.matrix.makeRotationAxis(rotationAxis, theta);
+	return cylinder;
 };
 
 const render = (params: {
