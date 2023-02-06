@@ -12,7 +12,8 @@ import {
   DirectionalLight,
   PerspectiveCamera,
 	AxesHelper,
-	Group, Material
+	Group,
+	type Material
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
@@ -79,181 +80,88 @@ const fillScene = () => {
 	const cyanMaterial = new MeshLambertMaterial({ color: 0x00FFFF });
 	const magentaMaterial = new MeshLambertMaterial({ color: 0xFF00FF });
 
-	const radius = 60;
-	const tube = 10;
-	const radialSegments = 24;
-	const height = 300;
-	const segmentsWidth = 12;
-	const arc = 2;
+	const radius = 20;
+	const segmentsWidth = 32;
 	
-	let helix;
+	let capsule;
 
-	helix = createHelix({
+	// along Y axis
+	capsule = createCapsule({
+		material: greenMaterial,
+		radius,
+		top: new Vector3( 0, 300, 0 ),
+		bottom: new Vector3( 0, 0, 0 ),
+		segmentsWidth
+	});
+	scene.add(capsule);
+
+	// along X axis
+	capsule = createCapsule({
 		material: redMaterial,
 		radius,
-		tube,
-		radialSegments,
-		tubularSegments: segmentsWidth,
-		height,
-		arc,
-		clockwise: true 
+		top: new Vector3( 300, 0, 0 ),
+		bottom: new Vector3( 0, 0, 0 ),
+		segmentsWidth,
+		openBottom: true
 	});
-	helix.position.y = height/2;
-	scene.add(helix);
-
-	helix = createHelix({
-		material: greenMaterial,
-		radius: radius/2,
-		tube,
-		radialSegments,
-		tubularSegments: segmentsWidth,
-		height,
-		arc,
-		clockwise: false
-	});
-	helix.position.y = height/2;
-	scene.add( helix );
-
-	// DNA
-	helix = createHelix({
+	scene.add(capsule);
+	
+	// along Z axis
+	capsule = createCapsule({
 		material: blueMaterial,
 		radius,
-		tube: tube / 2,
-		radialSegments,
-		tubularSegments: segmentsWidth,
-		height,
-		arc,
-		clockwise: false
+		top: new Vector3( 0, 0, 300 ),
+		bottom: new Vector3( 0, 0, 0 ),
+		segmentsWidth,
+		openBottom: true
 	});
-	helix.position.y = height/2;
-	helix.position.z = 2.5 * radius;
-	scene.add( helix );
+	scene.add(capsule);
 
-	helix = createHelix({
-		material: blueMaterial,
-		radius,
-		tube: tube / 2,
-		radialSegments,
-		tubularSegments: segmentsWidth,
-		height,
-		arc,
-		clockwise: false
-	});
-	helix.rotation.y = 120 * Math.PI / 180;
-	helix.position.y = height/2;
-	helix.position.z = 2.5 * radius;
-	scene.add( helix );
-
-
-	helix = createHelix({
+	// along XYZ axis
+	capsule = createCapsule({
 		material: grayMaterial,
 		radius,
-		tube: tube / 2,
-		radialSegments,
-		tubularSegments: segmentsWidth,
-		height: height / 2,
-		arc,
-		clockwise: true
+		top: new Vector3(200, 200, 200),
+		bottom: new Vector3(0, 0, 0),
+		segmentsWidth,
+		openBottom: true
 	});
-	helix.position.y = height / 2;
-	helix.position.x = 2.5 * radius;
-	scene.add(helix);
+	scene.add(capsule);
 
-	helix = createHelix({
+	// along -Y axis, translated in XYZ
+	capsule = createCapsule({
 		material: yellowMaterial,
-		radius: 0.75*radius,
-		tube: tube / 2,
-		radialSegments,
-		tubularSegments: segmentsWidth,
-		height,
-		arc: 4 * arc,
-		clockwise: false
+		radius,
+		top: new Vector3( 50, 100, -200 ),
+		bottom: new Vector3( 50, 300, -200 ),
+		segmentsWidth,
+		openBottom: true
 	});
-	helix.position.y = height/2;
-	helix.position.x = 2.5 * radius;
-	helix.position.z = -2.5 * radius;
-	scene.add( helix );
+	scene.add(capsule);
 
-	helix = createHelix({
+	// along X axis, from top of previous cylinder
+	capsule = createCapsule({
 		material: cyanMaterial,
-		radius: 0.75*radius,
-		tube: 4 * tube,
-		radialSegments,
-		tubularSegments: segmentsWidth,
-		height,
-		arc: 2 * arc,
-		clockwise: false
+		radius,
+		top: new Vector3(50, 300, -200),
+		bottom: new Vector3(250, 300, -200),
+		segmentsWidth,
+		openBottom: true
 	});
-	helix.position.y = height/2;
-	helix.position.x = 2.5 * radius;
-	helix.position.z = 2.5 * radius;
-	scene.add( helix );
+	scene.add(capsule);
 
-	helix = createHelix({
+	// continue from bottom of previous cylinder
+	capsule = createCapsule({
 		material: magentaMaterial,
 		radius,
-		tube,
-		radialSegments,
-		tubularSegments: segmentsWidth,
-		height,
-		arc,
-		clockwise: true
-	});
-	helix.rotation.x = 45 * Math.PI / 180;
-	helix.position.y = height/2;
-	helix.position.z = -2.5 * radius;
-	scene.add( helix );
+		top: new Vector3(250, 300, -200),
+		bottom: new Vector3(-150, 100, 0),
+		segmentsWidth
+	}); // try openEnded default to false
+	scene.add(capsule);
 
   return { scene };
 };
-
-const createHelix = (params: {
-	material: Material;
-	radius: number; // radius of helix itself
-	tube: number; // radius of tube
-	radialSegments: number; // number of capsules around a full circle
-	tubularSegments: number; // tessellation around equator of each tube
-	height: number; // height to extend, from *center* of tube ends along Y axis
-	arc: number; // how many times to go around the Y axis; currently just an integer
-	clockwise: boolean; // if true, go counterclockwise up the axis
-}) => {
-	const {
-		material,
-		radius,
-		tube,
-		radialSegments,
-		tubularSegments = 32,
-		height,
-		arc = 1,
-		clockwise = true
-	} = params;
-
-	const helix = new Group();
-	const top = new Vector3();
-	const sine_sign = clockwise ? 1 : -1;
-
-	///////////////
-	// YOUR CODE HERE: remove spheres, use capsules instead, going from point to point.
-	//
-	const sphereGeometry = new SphereGeometry( tube, tubularSegments, tubularSegments/2 );
-	for (let i = 0; i <= arc * radialSegments; i++) {
-		// going from X to Z axis
-		top.set(
-			radius * Math.cos(i * 2 * Math.PI / radialSegments),
-			height * (i / (arc * radialSegments)) - height/2,
-			sine_sign * radius * Math.sin(i * 2 * Math.PI / radialSegments)
-		);
-
-		const sphere = new Mesh(sphereGeometry, material);
-		sphere.position.copy(top);
-
-		helix.add(sphere);
-	}
-	///////////////
-
-	return helix;
-
-}
 
 const createCapsule = (params: {
 	material: Material;
