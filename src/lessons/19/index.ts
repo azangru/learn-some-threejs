@@ -12,7 +12,8 @@ import {
   DirectionalLight,
   PerspectiveCamera,
 	AxesHelper,
-	Group, Material
+	Group,
+	type Material
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
@@ -230,33 +231,72 @@ const createHelix = (params: {
 
 	const helix = new Group();
 	const top = new Vector3();
+	const bottom = new Vector3();
 	const sine_sign = clockwise ? 1 : -1;
 
-	///////////////
-	// YOUR CODE HERE: remove spheres, use capsules instead, going from point to point.
-	//
-	const sphereGeometry = new SphereGeometry( tube, tubularSegments, tubularSegments/2 );
-	for (let i = 0; i <= arc * radialSegments; i++) {
+	let cylinderGeometry: CylinderGeometry | undefined;
+	let sphereGeometry: SphereGeometry | undefined;
+
+	for (let i = 1; i <= arc * radialSegments; i++) {
 		// going from X to Z axis
+		const j = i - 1;
 		top.set(
 			radius * Math.cos(i * 2 * Math.PI / radialSegments),
 			height * (i / (arc * radialSegments)) - height/2,
 			sine_sign * radius * Math.sin(i * 2 * Math.PI / radialSegments)
 		);
+		bottom.set(
+			radius * Math.cos(j * 2 * Math.PI / radialSegments),
+			height * (j / (arc * radialSegments)) - height/2,
+			sine_sign * radius * Math.sin(j * 2 * Math.PI / radialSegments)
+		);
 
-		const sphere = new Mesh(sphereGeometry, material);
-		sphere.position.copy(top);
+		if (!(cylinderGeometry && sphereGeometry)) {
+			const capsuleLength = new Vector3().subVectors(top, bottom).length();
+			const capsuleGeometries = createGeometriesForCapsule({
+				radius: tube,
+				length: capsuleLength,
+				segmentsWidth: tubularSegments
+			});
+			cylinderGeometry = capsuleGeometries.cylinderGeometry;
+			sphereGeometry = capsuleGeometries.sphereGeometry;
+		}
 
-		helix.add(sphere);
+		const capsule = createCapsule({
+			material,
+			radius: tube,
+			segmentsWidth: tubularSegments,
+			cylinderGeometry,
+			sphereGeometry,
+			top,
+			bottom
+		});
+
+		helix.add(capsule);
 	}
-	///////////////
 
 	return helix;
-
 }
+
+const createGeometriesForCapsule = (params: {
+	radius: number;
+	length: number;
+	segmentsWidth?: number;
+}) => {
+	const { radius, length, segmentsWidth = 32 } = params;
+	const cylinderGeometry = new CylinderGeometry(radius, radius, length, segmentsWidth, 1, true);
+	const sphereGeometry = new SphereGeometry(radius, segmentsWidth, segmentsWidth/2);
+
+	return {
+		cylinderGeometry,
+		sphereGeometry
+	};
+};
 
 const createCapsule = (params: {
 	material: Material;
+	cylinderGeometry: CylinderGeometry;
+	sphereGeometry: SphereGeometry
 	radius: number;
 	top: Vector3;
 	bottom: Vector3;
@@ -266,27 +306,23 @@ const createCapsule = (params: {
 }) => {
 	const {
 		material,
-		radius,
+		cylinderGeometry,
+		sphereGeometry,
 		top,
 		bottom,
-		segmentsWidth = 32,
 		openTop = false,
 		openBottom = false
 	} = params;
 
 	const cylAxis = new Vector3().subVectors(top, bottom);
-	const length = cylAxis.length();
 	const center = new Vector3().addVectors(top, bottom).divideScalar(2);
 
-	const cylinderGeometry = new CylinderGeometry(radius, radius, length, segmentsWidth, 1, true);
 	const cylinder = new Mesh(cylinderGeometry, material);
 
 	// pass in the cylinder itself, its desired axis, and the place to move the center.
 	makeLengthAngleAxisTransform(cylinder, cylAxis, center);
 	const group = new Group();
 	group.add(cylinder);
-
-	const sphereGeometry = new SphereGeometry( radius, segmentsWidth, segmentsWidth/2 );
 
 	if (!openTop) {
 		const sphere = new Mesh(sphereGeometry, material);
