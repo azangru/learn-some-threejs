@@ -1,5 +1,5 @@
 import './style.css'
 
-import currentLesson from './lessons/22';
+import currentLesson from './lessons/23';
 
 currentLesson();
