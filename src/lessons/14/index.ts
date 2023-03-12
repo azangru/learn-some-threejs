@@ -3,7 +3,6 @@ import {
   WebGLRenderer,
   Mesh,
 	Object3D,
-  MeshLambertMaterial,
 	MeshPhongMaterial,
   BoxGeometry,
 	SphereGeometry,
