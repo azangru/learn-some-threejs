@@ -4,17 +4,17 @@ import {
   WebGLRenderer,
   BufferGeometry,
   TextureLoader,
-  Points,
-  PointsMaterial,
+  MeshBasicMaterial,
+  DoubleSide,
   Camera,
   BufferAttribute,
-  Texture,
-  Vector3
+  Mesh,
+  Texture
 } from 'three';
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-import textureImageUrl from './disc.png';
+import textureImageUrl from './lettergrid.png';
 
 import styles from './styles.module.css';
 
@@ -34,12 +34,12 @@ const main = async () => {
   renderer.setClearColor(0xAAAAAA, 1.0);
 
 	// CAMERA
-	const camera = new PerspectiveCamera(55, canvasRatio, 2, 8000);
-  camera.position.set(10, 5, 15);
+	const camera = new PerspectiveCamera(1, canvasRatio, 50, 150);
+  camera.position.set(0.5, 0.5, 100);
 
 	// CONTROLS
 	cameraControls = new OrbitControls(camera, renderer.domElement);
-  cameraControls.target.set(0, 0, 0);
+  cameraControls.target.set(0.5, 0.5, 0);
   cameraControls.update();
 
   const texture = await loadTexture();
@@ -68,42 +68,43 @@ const fillScene = (texture: Texture) => {
 	// SCENE
 	const scene = new Scene();
 
-  const geometry = createPointsGeometry();
-  const material = new PointsMaterial({
-    size: 20,
-    sizeAttenuation: false,
+  const geometry = createSquareGeometry();
+  const material = new MeshBasicMaterial({
     map: texture,
-    transparent: true,
-    alphaTest: 0.5 // <-- to discard transparent fragments of the texture
+    side: DoubleSide
   });
-  material.color.setHSL(0.9, 0.2, 0.6);
 
-  const particleSystem = new Points(geometry, material);
+  const mesh = new Mesh(geometry, material);
 
-	scene.add(particleSystem);
+	scene.add(mesh);
 
   return { scene };
 };
 
-const createPointsGeometry = () => {
-  const vertices: number[] = [];
+const createSquareGeometry = () => {
+  const vertices = [
+    0.0, 0.0, 0.0,
+    1.0, 0.0, 0.0,
+    1.0, 1.0, 0.0,
 
-  const vertex = new Vector3();
+    0.0, 0.0, 0.0,
+    1.0, 1.0, 0.0,
+    0.0, 1.0, 0.0,
+  ];
 
-  for (let i = -1000; i <= 1000; i+=100) {
-    for (let j = -1000; j <= 1000; j+=100) {
-      for (let k = -1000; k <= 1000; k+=100) {
-        vertex.x = i;
-        vertex.y = j;
-        vertex.z = k;
+  const uvs = [
+    0.75, 0.25,
+    1.0, 0.25,
+    1.0, 0.5,
 
-        vertices.push(...vertex.toArray());
-      }
-    }
-  }
+    0.75, 0.25,
+    1.0, 0.5,
+    0.75, 0.5,
+  ];
 
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3));
+  geometry.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2));
 
   return geometry;
 }
