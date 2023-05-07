@@ -10,7 +10,6 @@ import {
   DirectionalLight,
   PlaneGeometry,
   DoubleSide,
-  Vector2,
   Vector3,
   Color,
   UniformsUtils,
@@ -18,7 +17,6 @@ import {
 } from 'three';
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { TeapotGeometry } from 'three/examples/jsm/geometries/TeapotGeometry';
 
 import { GUI } from 'dat.gui';
 
@@ -30,10 +28,7 @@ import styles from './styles.module.css';
 let cameraControls: OrbitControls;
 
 const state = {
-  flashRadius: 2.0,
-  flashOffsetX: 1.7,
-  flashOffsetY: -0.3,
-
+  sphereRadius: 1.0,
   shininess: 20.0,
   ka: 0.2,
   kd: 0.4,
@@ -47,6 +42,10 @@ const state = {
   lhue: 0.04,
   lsaturation: 0.0,
   llightness: 0.7,
+
+  lx: 0.01,
+  ly: 1,
+  lz: 0.01
 };
 
 const main = async () => {
@@ -63,12 +62,12 @@ const main = async () => {
   renderer.setClearColor(0xAAAAAA, 1.0);
 
 	// CAMERA
-	const camera = new PerspectiveCamera(45, canvasRatio, 1, 800);
-  camera.position.set(4.3, 8.9, 10.6);
+	const camera = new PerspectiveCamera(45, canvasRatio, 0.001, 80);
+  camera.position.set(-1.41, 0.14, -0.56);
 
 	// CONTROLS
 	cameraControls = new OrbitControls(camera, renderer.domElement);
-  cameraControls.target.set(0, 0.5, 0);
+  cameraControls.target.set(0, -0.45, 0);
   cameraControls.update();
 
 	const { scene } = fillScene();
@@ -96,28 +95,11 @@ const fillScene = () => {
 	scene.add(ambientLight);
 	scene.add(directionalLight);
 
-  const teapotSize = 1;
-	const materialColor = new Color();
-	materialColor.setRGB(0, 1, 1);
-
-	const teapotMaterial = createShaderMaterial(directionalLight, ambientLight);
-	teapotMaterial.side = DoubleSide;
-
-  const teapotGeometry = new TeapotGeometry(teapotSize, 20, true, true, true, true);
-
-	const teapot = new Mesh(
-		teapotGeometry,
-    teapotMaterial
-  );
-  teapot.position.y += teapotSize
-  teapot.name = 'teapot';
-  scene.add(teapot);
-
   const solidGroundMaterial = createShaderMaterial(directionalLight, ambientLight);
   solidGroundMaterial.side = DoubleSide;
   
   const solidGround = new Mesh(
-		new PlaneGeometry(100, 100, 1,1),
+		new PlaneGeometry(1, 1, 100, 100),
 		solidGroundMaterial
   );
 	solidGround.rotation.x = - Math.PI / 2;
@@ -135,8 +117,6 @@ const shaderTypes = {
       uAmbientLightColor: { value: new Color(0x050505) },
       uMaterialColor: { value: new Color(0xFFFFFF) },
       uSpecularColor: { value: new Color(0xFFFFFF) },
-      uFlashOffset: { value: new Vector2() },
-      uFlashRadius: { value: 1.0 },
       uKd: {
         value: 0.7
       },
@@ -145,6 +125,9 @@ const shaderTypes = {
       },
       shininess: {
         value: 100.0
+      },
+      uSphereRadius2: {
+        value: 1.0
       }
     }
   }
@@ -175,38 +158,28 @@ const render = (params: {
 	camera: Camera
 }) => {
   const { scene, renderer, camera} = params;
-
-  const flashlightOffset = new Vector2();
-  flashlightOffset.set(-state.flashOffsetX, -state.flashOffsetY);
   
   const ground = scene.getObjectByName('ground') as Mesh;
   const groundMaterial = ground.material as ShaderMaterial;
-  groundMaterial.uniforms.uFlashRadius.value = state.flashRadius;
-  groundMaterial.uniforms.uFlashOffset.value.copy(flashlightOffset);
-
-  const teapot = scene.getObjectByName('teapot') as Mesh;
-  const teapotMaterial = teapot.material as ShaderMaterial;
-  teapotMaterial.uniforms.uFlashRadius.value = state.flashRadius;
-  teapotMaterial.uniforms.uFlashOffset.value.copy(flashlightOffset);
-  teapotMaterial.uniforms.shininess.value = state.shininess;
-	teapotMaterial.uniforms.uKd.value = state.kd;
-	teapotMaterial.uniforms.uKs.value = state.ks;
+  groundMaterial.uniforms.shininess.value = state.shininess;
+	groundMaterial.uniforms.uKd.value = state.kd;
+	groundMaterial.uniforms.uKs.value = state.ks;
 
   const materialColor = new Color();
   materialColor.setHSL(state.hue, state.saturation, state.lightness);
-  teapotMaterial.uniforms.uMaterialColor.value.copy(materialColor);
+  groundMaterial.uniforms.uMaterialColor.value.copy(materialColor);
 
   if (state.metallic) {
     materialColor.setRGB(1, 1, 1);
   }
-  teapotMaterial.uniforms.uSpecularColor.value.copy(materialColor);
+  groundMaterial.uniforms.uSpecularColor.value.copy(materialColor);
 
   // Ambient is just material's color times ka, light color is not involved
   const ambientLight = scene.getObjectByName('ambient_light') as Light;
 	ambientLight.color.setHSL(state.hue, state.saturation, state.lightness * state.ka);
 
   const directionalLight = scene.getObjectByName('light') as Light;
-  directionalLight.position.copy(camera.position);
+  directionalLight.position.set(state.lx, state.ly, state.lz);
 	directionalLight.color.setHSL(state.lhue, state.lsaturation, state.llightness);
 
 	renderer.render(scene, camera);
@@ -220,12 +193,8 @@ const render = (params: {
 const setupGui = (onChange: () => void) => {
   const gui = new GUI();
 
-  const flashlightControlFolder = gui.addFolder('Flashlight control');
-  flashlightControlFolder.add(state, 'flashRadius', 0.0, 10.0, 1.0).name('radius');
-  flashlightControlFolder.add(state, 'flashOffsetX', -10.0, 10.0, 1.0).name('offset X');
-  flashlightControlFolder.add(state, 'flashOffsetY', -10.0, 10.0, 1.0).name('offset Y');
-
   const materialControlFolder = gui.addFolder('Material control');
+  materialControlFolder.add(state, 'sphereRadius', 0.7072, 10.0, 1.0).name('sphere radius');
   materialControlFolder.add(state, 'shininess', 1.0, 100.0, 1.0).name('shininess');
   materialControlFolder.add(state, 'ka', 0.0, 1.0, 0.025).name('m_ka');
   materialControlFolder.add(state, 'kd', 0.0, 1.0, 0.025).name('m_kd');
@@ -241,6 +210,11 @@ const setupGui = (onChange: () => void) => {
   lightColorFolder.add(state, 'lhue', 0.0, 1.0, 0.025).name('hue');
   lightColorFolder.add(state, 'lsaturation', 0.0, 1.0, 0.025).name('saturation');
   lightColorFolder.add(state, 'llightness', 0.0, 1.0, 0.025).name('lightness');
+
+  const lightDirectionFolder = gui.addFolder('Light direction');
+  lightDirectionFolder.add(state, 'lx', -1.0, 1.0, 0.025).name('x');
+  lightDirectionFolder.add(state, 'ly', -1.0, 1.0, 0.025).name('y');
+  lightDirectionFolder.add(state, 'lz', -1.0, 1.0, 0.025).name('z');
 
   Object.values(gui.__folders).forEach(folder => {
     folder.__controllers.forEach((controller) => {
